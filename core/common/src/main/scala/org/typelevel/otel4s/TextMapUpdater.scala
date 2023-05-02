@@ -16,6 +16,20 @@
 
 package org.typelevel.otel4s
 
+import scala.collection.immutable.{MapOps, SeqOps}
+
 trait TextMapUpdater[A] {
   def updated(carrier: A, key: String, value: String): A
+}
+
+object TextMapUpdater {
+  implicit def forMap[CC[x, y] <: MapOps[x, y, CC, CC[x, y]]]
+      : TextMapUpdater[CC[String, String]] =
+    (carrier: CC[String, String], key: String, value: String) =>
+      carrier.updated(key, value)
+
+  implicit def forSeq[CC[x] <: SeqOps[x, CC, CC[x]]]
+      : TextMapUpdater[CC[(String, String)]] =
+    (carrier: CC[(String, String)], key: String, value: String) =>
+      carrier.appended(key -> value)
 }

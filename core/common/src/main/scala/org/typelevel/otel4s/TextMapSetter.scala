@@ -16,6 +16,9 @@
 
 package org.typelevel.otel4s
 
+import scala.collection.mutable
+import scala.collection.mutable.Buffer
+
 /** Offers a way to store a string value associated with a given key.
   *
   * A trait that defines a method to set a value in a key-value store.
@@ -42,4 +45,13 @@ trait TextMapSetter[A] {
     *   the value to set
     */
   def unsafeSet(carrier: A, key: String, value: String): Unit
+}
+
+object TextMapSetter {
+  implicit def forMap[C <: mutable.Map[String, String]]: TextMapSetter[C] =
+    (carrier: mutable.Map[String, String], key: String, value: String) =>
+      carrier.update(key, value)
+
+  implicit def forBuffer[C <: Buffer[(String, String)]]: TextMapSetter[C] =
+    (carrier: C, key: String, value: String) => carrier.append(key -> value)
 }
