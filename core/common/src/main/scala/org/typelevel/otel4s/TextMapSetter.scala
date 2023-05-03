@@ -49,8 +49,7 @@ trait TextMapSetter[A] {
 
 object TextMapSetter {
   implicit def forMap[C <: mutable.Map[String, String]]: TextMapSetter[C] =
-    (carrier: mutable.Map[String, String], key: String, value: String) =>
-      carrier.update(key, value)
+    (carrier: C, key: String, value: String) => carrier.update(key, value)
 
   implicit def forBuffer[C <: Buffer[(String, String)]]: TextMapSetter[C] =
     (carrier: C, key: String, value: String) => carrier.append(key -> value)
