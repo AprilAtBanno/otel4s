@@ -93,7 +93,7 @@ private[java] final case class SpanBuilderImpl[F[_]: Sync, Res <: Span[F]](
     def surround[A](fa: F[A]): F[A] =
       use(_ => fa)
 
-    def resource: Resource[F, F ~> F] = start.map(_._2)
+    def resource: Resource[F, (Result, F ~> F)] = start
 
     private def start: Resource[F, (Result, F ~> F)] =
       Resource.eval(runnerContext).flatMap(ctx => runner.start(ctx))

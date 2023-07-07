@@ -167,8 +167,8 @@ object SpanBuilder {
         def surround[A](fa: F[A]): F[A] =
           fa
 
-        def resource: Resource[F, F ~> F] =
-          Resource.pure(FunctionK.id)
+        def resource: Resource[F, (Res, F ~> F)] =
+          startSpan.map(res => res -> FunctionK.id)
       }
     }
 

@@ -181,7 +181,7 @@ object Tracer {
 
   trait Meta[F[_]] extends InstrumentMeta[F] {
     def noopSpanBuilder: SpanBuilder.Aux[F, Span[F]]
-    final def noopResSpan: Resource[F, F ~> F] =
+    final def noopResSpan: Resource[F, (Span[F], F ~> F)] =
       noopSpanBuilder.build.resource
   }
 

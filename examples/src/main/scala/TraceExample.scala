@@ -16,7 +16,6 @@
 
 import cats.effect.IO
 import cats.effect.IOApp
-import cats.effect.Resource
 import cats.effect.Temporal
 import cats.effect.implicits._
 import cats.implicits._
@@ -133,18 +132,23 @@ object TraceExample extends IOApp.Simple {
             InstitutionServiceClient.apply[IO],
             UserDatabase.apply[IO]
           )
-          val resource: Resource[IO, Unit] =
-            Resource.make(IO.sleep(50.millis))(_ => IO.sleep(100.millis))
           tracer
             .spanResource("Start up")
-            .flatMap(resource.mapK(_))
-            .surround(
-              userIdAlg
-                .getAllUsersForInstitution(
-                  "9902181e-1d8d-4e00-913d-51532b493f1b"
-                )
-                .flatMap(IO.println)
-            )
+            .use { case (_, nt /* natural transformation */ ) =>
+              for {
+                _ <- nt(tracer.span("acquire").surround(IO.sleep(50.millis)))
+                _ <- nt {
+                  tracer.span("use").surround {
+                    userIdAlg
+                      .getAllUsersForInstitution(
+                        "9902181e-1d8d-4e00-913d-51532b493f1b"
+                      )
+                      .flatMap(IO.println)
+                  }
+                }
+                _ <- nt(tracer.span("release").surround(IO.sleep(100.millis)))
+              } yield ()
+            }
       }
     }
   }

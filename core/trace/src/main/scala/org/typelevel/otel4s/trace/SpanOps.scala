@@ -108,7 +108,7 @@ trait SpanOps[F[_]] {
     */
   def surround[A](fa: F[A]): F[A]
 
-  def resource: Resource[F, F ~> F]
+  def resource: Resource[F, (Result, F ~> F)]
 }
 
 object SpanOps {

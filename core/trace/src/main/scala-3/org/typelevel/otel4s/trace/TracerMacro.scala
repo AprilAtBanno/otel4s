@@ -110,7 +110,7 @@ private[otel4s] trait TracerMacro[F[_]] {
   inline def spanResource(
       inline name: String,
       inline attributes: Attribute[_]*
-  ): Resource[F, F ~> F] =
+  ): Resource[F, (Span[F], F ~> F)] =
     ${ TracerMacro.spanResource('self, 'name, 'attributes) }
 
 }
