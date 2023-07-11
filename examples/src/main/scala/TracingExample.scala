@@ -62,12 +62,15 @@ object TracingExample extends IOApp.Simple {
       otel4s.tracerProvider.tracer("example").get.flatMap {
         implicit tracer: Tracer[IO] =>
           tracer
-            .spanResource("resource")
-            .use { case (_, nt /* natural transformation */ ) =>
-              for {
-                _ <- nt(tracer.span("acquire").surround(IO.sleep(50.millis)))
-                _ <- nt {
-                  tracer.span("use").surround {
+            .span("resource")
+            .resource
+            .use { case (span, wrap) =>
+              // `wrap` encloses its contents within the "resource" span;
+              // anything not applied to `wrap` will not end up in the span
+              wrap {
+                for {
+                  _ <- tracer.span("acquire").surround(IO.sleep(50.millis))
+                  _ <- tracer.span("use").surround {
                     Work[IO].request(
                       Map(
                         "X-B3-TraceId" -> "80f198ee56343ba864fe8b2a57d3eff7",
@@ -77,9 +80,10 @@ object TracingExample extends IOApp.Simple {
                       )
                     )
                   }
-                }
-                _ <- nt(tracer.span("release").surround(IO.sleep(100.millis)))
-              } yield ()
+                  _ <- span.addEvent("event")
+                  _ <- tracer.span("release").surround(IO.sleep(100.millis))
+                } yield ()
+              }
             }
       }
     }
